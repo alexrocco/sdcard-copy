@@ -4,6 +4,7 @@ import (
 	"github.com/alexrocco/sdcard-copy/aws"
 	"github.com/alexrocco/sdcard-copy/slice"
 	"github.com/pkg/errors"
+	"github.com/schollz/progressbar/v3"
 	"log"
 	"path/filepath"
 )
@@ -67,8 +68,23 @@ func (a *AssetProcessor) Process(asset Asset) error {
 			diffPathsUpload = append(diffPathsUpload, assetsSdCard[diff])
 		}
 
+		// Creates a progress bar to follow what is happening in the s3 upload
+		progressBar := progressbar.NewOptions(len(diffPathsUpload), progressbar.OptionSetDescription(asset.Description))
+		uploaded := make(chan string)
+		go func() {
+			for {
+				select {
+				case <-uploaded:
+					err := progressBar.Add(1)
+					if err != nil {
+						a.Log.Printf("Error increasing the progress bar: %v \n", err)
+					}
+				}
+			}
+		}()
+
 		// Batch upload all the diffs
-		err = a.S3.BatchUpload(asset.S3BucketName, asset.S3BucketPrefix, diffPathsUpload, asset.Description)
+		err = a.S3.Upload(asset.S3BucketName, asset.S3BucketPrefix, diffPathsUpload, uploaded)
 		if err != nil {
 			return errors.Wrap(err, "error when uploading all the assets to the AWS S3 bucket")
 		}

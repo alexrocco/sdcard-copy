@@ -36,7 +36,7 @@ func main() {
 		Bash:        bash,
 	}
 
-	s3 := aws.S3{
+	s3 := aws.S3LocalCred{
 		AwsRegion: "us-east-2",
 	}
 

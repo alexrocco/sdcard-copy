@@ -47,16 +47,16 @@ func (mr *MockS3ApiMockRecorder) ListAllKeys(bucketName, prefix interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllKeys", reflect.TypeOf((*MockS3Api)(nil).ListAllKeys), bucketName, prefix)
 }
 
-// BatchUpload mocks base method
-func (m *MockS3Api) BatchUpload(bucketName, prefix string, uploadPaths []string, description string) error {
+// Upload mocks base method
+func (m *MockS3Api) Upload(bucketName, prefix string, uploadPaths []string, uploaded chan<- string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BatchUpload", bucketName, prefix, uploadPaths, description)
+	ret := m.ctrl.Call(m, "Upload", bucketName, prefix, uploadPaths, uploaded)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// BatchUpload indicates an expected call of BatchUpload
-func (mr *MockS3ApiMockRecorder) BatchUpload(bucketName, prefix, uploadPaths, description interface{}) *gomock.Call {
+// Upload indicates an expected call of Upload
+func (mr *MockS3ApiMockRecorder) Upload(bucketName, prefix, uploadPaths, uploaded interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchUpload", reflect.TypeOf((*MockS3Api)(nil).BatchUpload), bucketName, prefix, uploadPaths, description)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upload", reflect.TypeOf((*MockS3Api)(nil).Upload), bucketName, prefix, uploadPaths, uploaded)
 }

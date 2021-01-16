@@ -64,11 +64,11 @@ func TestAssetProcessor_Process(t *testing.T) {
 			if len(tt.wantedUploadedAssets) > 0 {
 				timesCalledUploaded = 1
 			}
-			mockS3.EXPECT().BatchUpload(
+			mockS3.EXPECT().Upload(
 				tt.args.asset.S3BucketName,
 				tt.args.asset.S3BucketPrefix,
 				tt.wantedUploadedAssets,
-				tt.args.asset.Description).
+				gomock.Any()).
 				Return(nil).Times(timesCalledUploaded)
 
 			assetProcessor := AssetProcessor{

@@ -12,22 +12,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/schollz/progressbar/v3"
 )
 
-// S3Api describe the calls to AWS S3 APi
+// S3Api describe the calls to AWS S3 API
 type S3Api interface {
+	// ListAllKeys list all the keys in a prefix/path of a bucket
 	ListAllKeys(bucketName string, prefix string) ([]string, error)
-	BatchUpload(bucketName string, prefix string, uploadPaths []string, description string) error
+	// Upload upload a slice of path to a bucket and prefix
+	Upload(bucketName string, prefix string, uploadPaths []string, uploaded chan<- string) error
 }
 
-// S3 holds aws configs to use S3 api
-type S3 struct {
+// S3LocalCred holds aws configs to use AWS local credentials configured by awscli.
+type S3LocalCred struct {
 	AwsRegion string
 }
 
-// ListAllKeys list all the keys in a prefix/path of a bucket
-func (s *S3) ListAllKeys(bucketName string, prefix string) ([]string, error) {
+func (s *S3LocalCred) ListAllKeys(bucketName string, prefix string) ([]string, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(s.AwsRegion),
 	}))
@@ -75,17 +75,12 @@ func (s *S3) ListAllKeys(bucketName string, prefix string) ([]string, error) {
 	return keys, nil
 }
 
-// BatchUpload batch upload to AWS S3
-func (s *S3) BatchUpload(bucketName string, prefix string, uploadPaths []string, description string) error {
+func (s *S3LocalCred) Upload(bucketName string, prefix string, uploadPaths []string, uploaded chan<- string) error {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(s.AwsRegion),
 	}))
 
 	uploader := s3manager.NewUploader(sess)
-
-	// Create the progress bar in the console
-	bar := progressbar.NewOptions(len(uploadPaths),
-		progressbar.OptionSetDescription(description))
 
 	for _, upload := range uploadPaths {
 		file, err := os.Open(upload)
@@ -107,11 +102,10 @@ func (s *S3) BatchUpload(bucketName string, prefix string, uploadPaths []string,
 			return errors.Wrapf(err, "can't close file %q", upload)
 		}
 
-		err = bar.Add(1)
-		if err != nil {
-			return errors.Wrap(err, "can't increase progress bar")
-		}
+		uploaded <- upload
 	}
+
+	close(uploaded)
 
 	return nil
 }
