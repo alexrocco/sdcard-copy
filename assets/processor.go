@@ -3,8 +3,8 @@ package assets
 import (
 	"github.com/alexrocco/sdcard-copy/aws"
 	"github.com/alexrocco/sdcard-copy/slice"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/pkg/errors"
-	"github.com/schollz/progressbar/v3"
 	"log"
 	"path/filepath"
 )
@@ -69,16 +69,13 @@ func (a *AssetProcessor) Process(asset Asset) error {
 		}
 
 		// Creates a progress bar to follow what is happening in the s3 upload
-		progressBar := progressbar.NewOptions(len(diffPathsUpload), progressbar.OptionSetDescription(asset.Description))
+		bar := pb.StartNew(len(diffPathsUpload))
 		uploaded := make(chan string)
 		go func() {
 			for {
 				select {
 				case <-uploaded:
-					err := progressBar.Add(1)
-					if err != nil {
-						a.Log.Printf("Error increasing the progress bar: %v \n", err)
-					}
+					bar.Increment()
 				}
 			}
 		}()

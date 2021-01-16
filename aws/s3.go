@@ -92,6 +92,10 @@ func (s *S3LocalCred) Upload(bucketName string, prefix string, uploadPaths []str
 			Bucket: aws.String(bucketName),
 			Key:    aws.String(fmt.Sprintf("%s/%s", prefix, filepath.Base(file.Name()))),
 			Body:   file,
+
+		}, func(u *s3manager.Uploader) {
+			u.PartSize = 30 * 1024 * 1024 // 30MB part size to send all files in a single part.
+			u.Concurrency = 30
 		})
 		if err != nil {
 			return errors.Wrapf(err, "can't upload %q to AWS S3", upload)
