@@ -1,7 +1,7 @@
-package assets
+package asset
 
 import (
-	"github.com/alexrocco/sdcard-copy/mocks"
+	"github.com/alexrocco/sdcard-copy/mock"
 	"github.com/golang/mock/gomock"
 	"io/ioutil"
 	"log"
@@ -10,7 +10,7 @@ import (
 
 func TestAssetProcessor_Process(t *testing.T) {
 	type args struct {
-		asset Asset
+		asset Config
 	}
 	tests := []struct {
 		name                 string
@@ -22,7 +22,7 @@ func TestAssetProcessor_Process(t *testing.T) {
 		{
 			name: "It should upload the diff",
 			args: args{
-				asset: Asset{
+				asset: Config{
 					Description:    "testDescription",
 					SdCardRegex:    "testRegex",
 					S3BucketName:   "testBucketName",
@@ -36,7 +36,7 @@ func TestAssetProcessor_Process(t *testing.T) {
 		{
 			name: "It should not upload with no diff",
 			args: args{
-				asset: Asset{
+				asset: Config{
 					Description:    "testDescription",
 					SdCardRegex:    "testRegex",
 					S3BucketName:   "testBucketName",
@@ -54,10 +54,10 @@ func TestAssetProcessor_Process(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockFinder := mocks.NewMockFinder(ctrl)
+			mockFinder := mock.NewMockFinder(ctrl)
 			mockFinder.EXPECT().Find(tt.args.asset.SdCardRegex).Return(tt.foundAssets, nil).Times(1)
 
-			mockS3 := mocks.NewMockS3Api(ctrl)
+			mockS3 := mock.NewMockS3Api(ctrl)
 			mockS3.EXPECT().ListAllKeys(tt.args.asset.S3BucketName, tt.args.asset.S3BucketPrefix).Return(tt.s3Assets, nil).Times(1)
 
 			timesCalledUploaded := 0
@@ -71,13 +71,13 @@ func TestAssetProcessor_Process(t *testing.T) {
 				gomock.Any()).
 				Return(nil).Times(timesCalledUploaded)
 
-			assetProcessor := AssetProcessor{
+			sdCardProcessor := SdCardProcessor{
 				Finder: mockFinder,
 				S3:     mockS3,
 				Log:    log.New(ioutil.Discard, "", log.Ltime),
 			}
 
-			gotErr := assetProcessor.Process(tt.args.asset)
+			gotErr := sdCardProcessor.Process(tt.args.asset)
 			if gotErr != nil {
 				t.Errorf("No error should be found, but got %v", gotErr)
 			}

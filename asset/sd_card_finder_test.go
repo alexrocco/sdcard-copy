@@ -1,4 +1,4 @@
-package assets
+package asset
 
 import (
 	"github.com/alexrocco/sdcard-copy/shell"

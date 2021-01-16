@@ -1,4 +1,4 @@
-package assets
+package asset
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-//SdCardFinder finds assets in the sd card
+//SdCardFinder finds asset in the sd card
 type SdCardFinder struct {
 	MountedPath string
 	Bash        shell.Bash

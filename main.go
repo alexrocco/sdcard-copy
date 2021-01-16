@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/alexrocco/sdcard-copy/assets"
+	"github.com/alexrocco/sdcard-copy/asset"
 	"github.com/alexrocco/sdcard-copy/aws"
 	"github.com/alexrocco/sdcard-copy/shell"
 )
@@ -31,7 +31,7 @@ func main() {
 	// Remove the break line if exists
 	sdCardMountPath = strings.TrimSuffix(sdCardMountPath, "\n")
 
-	sdCardFinder := assets.SdCardFinder{
+	sdCardFinder := asset.SdCardFinder{
 		MountedPath: sdCardMountPath,
 		Bash:        bash,
 	}
@@ -40,19 +40,19 @@ func main() {
 		AwsRegion: "us-east-2",
 	}
 
-	assetProcessor := assets.AssetProcessor{
+	sdCardProcessor := asset.SdCardProcessor{
 		Finder: &sdCardFinder,
 		S3:     &s3,
 		Log:    log,
 	}
 
-	assets, err := assets.Load()
+	assets, err := asset.LoadConfigs()
 	if err != nil {
-		log.Fatalf("Error loading assets: %v", err)
+		log.Fatalf("Error loading asset: %v", err)
 	}
 
 	for _, a := range assets {
-		err = assetProcessor.Process(a)
+		err = sdCardProcessor.Process(a)
 		if err != nil {
 			log.Fatalf("Error processing %q: %v", a.Description, err)
 		}

@@ -1,6 +1,6 @@
 package aws
 
-//go:generate mockgen -source=./s3.go -package=mocks -destination=../mocks/mock_s3.go S3Api
+//go:generate mockgen -source=./s3.go -package=mock -destination=../mock/mock_s3.go S3Api
 
 import (
 	"fmt"

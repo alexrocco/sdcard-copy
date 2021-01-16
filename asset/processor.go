@@ -1,4 +1,4 @@
-package assets
+package asset
 
 import (
 	"github.com/alexrocco/sdcard-copy/aws"
@@ -9,27 +9,27 @@ import (
 	"path/filepath"
 )
 
-// Processor process assets
+// Processor process asset
 type Processor interface {
 	// Process process the AssetProcess
-	Process(asset Asset) error
+	Process(asset Config) error
 }
 
-// AssetProcessor process assets
-type AssetProcessor struct {
+// SdCardProcessor process asset from the SD card
+type SdCardProcessor struct {
 	Finder Finder
 	S3     aws.S3Api
 
 	Log *log.Logger
 }
 
-func (a *AssetProcessor) Process(asset Asset) error {
+func (a *SdCardProcessor) Process(asset Config) error {
 	a.Log.Println("Processing", asset.Description)
 
-	// Find all the assets in the sd card
+	// Find all the asset in the sd card
 	assetPaths, err := a.Finder.Find(asset.SdCardRegex)
 	if err != nil {
-		return errors.Wrap(err, "error when finding the assets in the sd card")
+		return errors.Wrap(err, "error when finding the asset in the sd card")
 	}
 
 	// Map to hold the file name and path to help in the upload part
@@ -38,7 +38,7 @@ func (a *AssetProcessor) Process(asset Asset) error {
 		assetsSdCard[filepath.Base(jpgPath)] = jpgPath
 	}
 
-	// Find all the keys/assets in the S3 bucket
+	// Find all the keys/asset in the S3 bucket
 	s3Keys, err := a.S3.ListAllKeys(asset.S3BucketName, asset.S3BucketPrefix)
 	if err != nil {
 		return errors.Wrap(err, "error when listing all the AWS S3 keys in the bucket")
@@ -60,7 +60,7 @@ func (a *AssetProcessor) Process(asset Asset) error {
 	diffs := slice.Diff(assetFiles, assetsS3)
 
 	if len(diffs) > 0 {
-		a.Log.Printf("Found %d assets to upload", len(diffs))
+		a.Log.Printf("Found %d asset to upload", len(diffs))
 
 		// Gets all the paths to upload
 		var diffPathsUpload []string
@@ -83,10 +83,10 @@ func (a *AssetProcessor) Process(asset Asset) error {
 		// Batch upload all the diffs
 		err = a.S3.Upload(asset.S3BucketName, asset.S3BucketPrefix, diffPathsUpload, uploaded)
 		if err != nil {
-			return errors.Wrap(err, "error when uploading all the assets to the AWS S3 bucket")
+			return errors.Wrap(err, "error when uploading all the asset to the AWS S3 bucket")
 		}
 	} else {
-		a.Log.Println("No assets found to upload")
+		a.Log.Println("No asset found to upload")
 	}
 
 	return nil
