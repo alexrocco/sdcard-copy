@@ -74,6 +74,7 @@ func (a *SdCardProcessor) Process(asset Config) error {
 		if err != nil {
 			a.Log.Fatalf("Error rendering progress bar blank: %v", err)
 		}
+
 		uploaded := make(chan string)
 		go func() {
 			for {
@@ -85,10 +86,7 @@ func (a *SdCardProcessor) Process(asset Config) error {
 							a.Log.Fatalf("Error incrementing progress bar: %v", err)
 						}
 					} else {
-						err := bar.Finish()
-						if err != nil {
-							a.Log.Fatalf("Error finishing progress bar: %v", err)
-						}
+						// channel closed, returning function
 						return
 					}
 
@@ -96,14 +94,23 @@ func (a *SdCardProcessor) Process(asset Config) error {
 			}
 		}()
 
-		// Batch upload all the diffs
+		// Upload all the diffs
 		err = a.S3.Upload(asset.S3BucketName, asset.S3BucketPrefix, diffPathsUpload, uploaded)
 		if err != nil {
 			return errors.Wrap(err, "error when uploading all the asset to the AWS S3 bucket")
 		}
+
+		// Finish the progress bar
+		err = bar.Finish()
+		if err != nil {
+			a.Log.Fatalf("Error finishing progress bar: %v", err)
+		}
 	} else {
 		a.Log.Println("No asset found to upload")
 	}
+
+	// Skip one line for the next iteration
+	a.Log.Println()
 
 	return nil
 }
