@@ -16,7 +16,7 @@ type Config struct {
 
 // LoadConfigs loads all the assets config from the yaml
 func LoadConfigs() ([]Config, error) {
-	content, err := ioutil.ReadFile("asset.yaml")
+	content, err := ioutil.ReadFile("assets.yaml")
 	if err != nil {
 		return []Config{}, errors.Wrap(err, "error reading asset yaml")
 	}
