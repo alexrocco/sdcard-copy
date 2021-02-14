@@ -69,7 +69,8 @@ func (a *SdCardProcessor) Process(asset Config) error {
 		}
 
 		// Creates a progress bar to follow what is happening in the s3 upload
-		bar := progressbar.NewOptions(len(diffPathsUpload), progressbar.OptionSetDescription(asset.Description))
+		bar := progressbar.Default(int64(len(diffPathsUpload)))
+		bar.Describe(asset.Description)
 		err := bar.RenderBlank()
 		if err != nil {
 			a.Log.Fatalf("Error rendering progress bar blank: %v", err)
