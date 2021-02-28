@@ -1,12 +1,17 @@
 package main
 
 import (
-	"log"
-	"os"
+	"github.com/sirupsen/logrus"
 )
 
 // NewLogger creates the logger for the app.
-func NewLogger() *log.Logger {
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+func NewLogger() *logrus.Logger {
+	logger := logrus.New()
+	logger.SetFormatter(&logrus.TextFormatter{
+		ForceColors:     true,
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
+
 	return logger
 }

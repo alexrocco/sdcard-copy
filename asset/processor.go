@@ -5,7 +5,7 @@ import (
 	"github.com/alexrocco/sdcard-copy/slice"
 	"github.com/pkg/errors"
 	"github.com/schollz/progressbar/v3"
-	"log"
+	"github.com/sirupsen/logrus"
 	"path/filepath"
 )
 
@@ -20,17 +20,21 @@ type SdCardProcessor struct {
 	Finder Finder
 	S3     aws.S3Api
 
-	Log *log.Logger
+	Log *logrus.Logger
 }
 
 func (a *SdCardProcessor) Process(asset Config) error {
-	a.Log.Println("Processing", asset.Description)
+	a.Log.Infof("Processing %s", asset.Description)
+
+	a.Log.Infof("Finding the %s in the Sd Card", asset.Description)
 
 	// Find all the asset in the sd card
 	assetPaths, err := a.Finder.Find(asset.SdCardRegex)
 	if err != nil {
 		return errors.Wrap(err, "error when finding the asset in the sd card")
 	}
+
+	a.Log.Infof("Found %d asset(s) in the sd card", len(assetPaths))
 
 	// Map to hold the file name and path to help in the upload part
 	assetsSdCard := make(map[string]string)
@@ -60,21 +64,22 @@ func (a *SdCardProcessor) Process(asset Config) error {
 	diffs := slice.Diff(assetFiles, assetsS3)
 
 	if len(diffs) > 0 {
-		a.Log.Printf("Found %d asset to upload", len(diffs))
+		a.Log.Infof("Found %d asset(s) to upload", len(diffs))
 
-		// Gets all the paths to upload
+		// Get all the paths to upload
 		var diffPathsUpload []string
 		for _, diff := range diffs {
 			diffPathsUpload = append(diffPathsUpload, assetsSdCard[diff])
 		}
 
 		// Creates a progress bar to follow what is happening in the s3 upload
-		bar := progressbar.Default(int64(len(diffPathsUpload)))
-		bar.Describe(asset.Description)
+		bar := progressbar.Default(int64(len(diffs)))
 		err := bar.RenderBlank()
 		if err != nil {
 			a.Log.Fatalf("Error rendering progress bar blank: %v", err)
 		}
+
+		bar.Describe(asset.Description)
 
 		uploaded := make(chan string)
 		go func() {
@@ -90,7 +95,6 @@ func (a *SdCardProcessor) Process(asset Config) error {
 						// channel closed, returning function
 						return
 					}
-
 				}
 			}
 		}()
@@ -107,11 +111,11 @@ func (a *SdCardProcessor) Process(asset Config) error {
 			a.Log.Fatalf("Error finishing progress bar: %v", err)
 		}
 	} else {
-		a.Log.Println("No asset found to upload")
+		a.Log.Info("No asset found to upload")
 	}
 
 	// Skip one line for the next iteration
-	a.Log.Println()
+	a.Log.Info()
 
 	return nil
 }
